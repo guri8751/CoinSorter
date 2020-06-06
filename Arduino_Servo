@@ -1,0 +1,107 @@
+//Arduino Code to be uploaded
+#include <Servo.h>
+
+Servo servo;
+
+void setup()
+{
+  servo.attach(8);
+  servo.write(0);
+  Serial.begin(9600);
+  delay(2000);
+  
+}
+
+void loop(){
+  if(Serial.available() > 0)
+  {
+    String data = Serial.readStringUntil('\n');
+    String prev = "OneDollar";
+    if(data == "OneDollar");
+    {
+      servo.write(0);
+      prev = "OneDollar";
+    }
+    
+   
+    if(prev == "OneDollar")
+    {
+        if(data == "50Cent")
+        {
+          servo.write(90);
+          prev = "50Cent";
+        }
+        else if(data == "5Cent")
+        {
+          servo.write(180);
+          prev = "5Cent";
+        }
+        else if(data == "10Cent")
+        {
+          servo.write(180);
+          servo.write(90);
+          prev = "10Cent";
+        }
+    }
+    if(prev == "50Cent")
+    {
+        if(data == "5Cent")
+        {
+          servo.write(90);
+          prev = "5Cent";
+        }
+        else if(data == "OneDollar")
+        {
+          servo.write(180);
+          servo.write(90);
+          prev = "OneDollar";
+        }
+        else if(data == "10Cent")
+        {
+          servo.write(180);
+          prev = "10Cent";
+        }
+    }
+    
+    if(prev == "5Cent")
+    {
+        if(data == "OneDollar")
+        {
+          servo.write(180);
+          prev = "OneDollar";
+        }
+        else if(data == "50Cent")
+        {
+          servo.write(180);
+          servo.write(90);
+          prev = "50Cent";
+        }
+        else if(data == "10Cent")
+        {
+          servo.write(90);
+          prev = "10Cent";
+        }
+    }
+    
+    if(prev == "10Cent")
+    {
+        if(data == "OneDollar")
+        {
+          servo.writeMicroseconds(90);
+          prev = "OneDollar";
+        }
+        else if(data == "50Cent")
+        {
+          servo.write(180);
+          prev = "50Cent";
+        }
+        else if(data == "5Cent")
+        {
+          servo.write(180);
+          servo.write(90);
+          prev = "5Cent";
+        }
+    }
+    
+  }
+}
