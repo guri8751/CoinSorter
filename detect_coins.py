@@ -11,6 +11,15 @@ import glob
 import cv2
 import serial
 import time
+from twilio.rest import Client
+
+#for privacy purposes I haven't given my account sid and token
+account_sid = 'your_account_sid'
+auth_token = 'your_auth_token'
+
+client = Client(account_sid, auth_token)
+
+
 ser = serial.Serial('/dev/ttyACM0', 9600) #connecting to Arduino via Serial Communication
 
 
@@ -33,12 +42,13 @@ def calcHistogramFromFile(file):
 class Enum(tuple): __getattr__ = tuple.index
 
 
-Coin = Enum(('Cent50', 'OneDollar', 'Cent5'))
+Coin = Enum(('Cent50', 'OneDollar', 'Cent5', 'Cent10'))
 
   
 sample_images_50Cent = glob.glob("SampleImages/50Cent/*")
 sample_images_OneDollar = glob.glob("SampleImages/OneDollar/*")
 sample_images_5Cent = glob.glob("SampleImages/5Cent/*")
+sample_images_10Cent = glob.glob("SampleImages/10Cent/*")
 
 X = []
 y = []
@@ -53,6 +63,9 @@ for i in sample_images_OneDollar:
 for i in sample_images_5Cent:
     X.append(calcHistogramFromFile(i))
     y.append(Coin.Cent5)
+for i in sample_images_10Cent:
+    X.append(calcHistogramFromFile(i))
+    y.append(Coin.Cent10)
 
 
     
@@ -154,6 +167,9 @@ while True:
     elif coins[i] == "Cent5":
         diameter = [x / biggest * 18.25 for x in diameter]
         
+    elif coins[i] == "Cent10":
+        diameter = [x / biggest * 22.25 for x in diameter]
+        
 
    
 
@@ -169,48 +185,32 @@ while True:
         if math.isclose(d, 35.25, abs_tol=3.5) and m == "Cent50":
             t = "50 Cent"
             total += 50
+            message = client.messages.create( body='50 Cent Coin Detected!',from_='whatsapp:+14155238886', to='whatsapp:your_number')
+            print(message.sid)
             ser.write(b"50Cent\n")
     
         elif math.isclose(d, 24.25, abs_tol=1.25) and m == "OneDollar":
             t = "One Dollar"
             total += 100
+            message = client.messages.create( body='One Dollar Coin Detected!',from_='whatsapp:+14155238886', to='whatsapp:your_number')
+            print(message.sid)
             ser.write(b"OneDolar\n")
             
         elif math.isclose(d, 18.25, abs_tol=2.5) and m == "Cent5":
             t = "5 Cent"
             total += 5
+            message = client.messages.create( body='5 Cent Coin Detected!',from_='whatsapp:+14155238886', to='whatsapp:your_number')
+            print(message.sid)
             ser.write(b"5Cent\n")
+            
+        elif math.isclose(d, 22.25, abs_tol=2.5) and m == "Cent10":
+            t = "10 Cent"
+            total += 10
+            message = client.messages.create( body='10 Cent Coin Detected!',from_='whatsapp:+14155238886', to='whatsapp:your_number')
+            print(message.sid)
+            ser.write(b"10Cent\n")
         
-    
-        
-        
-    
-
-        
-        cv2.putText(output, t,
-                    (x - 40, y + 22), cv2.FONT_HERSHEY_PLAIN,
-                    1.5, (255, 255, 255), thickness=2, lineType=cv2.LINE_AA)
-        i += 1
-
-    
-    d = 768 / output.shape[1]
-    dim = (768, int(output.shape[0] * d))
-    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
-    output = cv2.resize(output, dim, interpolation=cv2.INTER_AREA)
-
-    
-    cv2.putText(output, scaledTo,
-                (5, output.shape[0] - 40), cv2.FONT_HERSHEY_PLAIN,
-                1.0, (0, 0, 255), lineType=cv2.LINE_AA)
-    cv2.putText(output, "Coins detected: {}, EUR {:2}".format(count, total / 100),
-                (5, output.shape[0] - 24), cv2.FONT_HERSHEY_PLAIN,
-                1.0, (0, 0, 255), lineType=cv2.LINE_AA)
-    cv2.putText(output, "Classifier mean accuracy: {}%".format(score),
-                (5, output.shape[0] - 8), cv2.FONT_HERSHEY_PLAIN,
-                1.0, (0, 0, 255), lineType=cv2.LINE_AA)
-
-    
-    cv2.imshow("Output", np.hstack([image, output]))
+ 
     cv2.waitKey(0)
     
 cap.release()
